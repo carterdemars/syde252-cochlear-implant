@@ -6,20 +6,30 @@ from scipy.io import wavfile
 from scipy.signal import resample
 
 
-
 class SignalProcessor():
-    def __init__(self, audio):
-        self.audio = audio
+    def __init__(self):
+        self.sample_rate = None
+        self.audio = None
 
-    def get_sampling_rate(self, audio):
+    def read_audio(self, filepath):
+        """
+        :param filepath: relative path to the audio file
+        :return: None
+        """
+        self.sample_rate, self.audio = wavfile.read(filepath)
+
+    def get_sampling_rate(self):
         """
         3.6
         The function determines sampling rate in kHz of an input signal.
         :return: sampling rate
         """
-        sample_rate, audio = wavfile.read(audio)
-        print(f"Sampling Rate of Original WAV file: {sample_rate} Hz")
-        return
+        if self.sample_rate:
+            print(f"Sampling Rate of Original WAV file: {self.sample_rate} Hz")
+        else:
+            print("You must upload an audio before calculating sampling rate")
+
+        return self.sample_rate
 
     def play_sound(self):
         """
@@ -37,5 +47,16 @@ class SignalProcessor():
 
 
 if __name__ == "__main__":
-    test_audio = None
-    processor = SignalProcessor(test_audio)
+
+    # testing methods
+    test_audio1 = 'audio-files/02-coffee-shop-ambiance.wav'
+    processor = SignalProcessor()
+    processor.read_audio(test_audio1)
+    processor.get_sampling_rate()
+
+    # more tests
+    test_audio2 = 'audio-files/01-pickle-asmr-quiet.wav'
+    processor = SignalProcessor()
+    processor.read_audio(test_audio2)
+    processor.get_sampling_rate()
+
