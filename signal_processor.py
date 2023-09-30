@@ -13,13 +13,21 @@ class SignalProcessor():
 
     def get_sampling_rate(self, audio):
         """
-        3.6
+        3.1: reads the file first, then finds sampling rate
         The function determines sampling rate in kHz of an input signal.
         :return: sampling rate
         """
         sample_rate, audio = wavfile.read(audio)
         print(f"Sampling Rate of Original WAV file: {sample_rate} Hz")
         return
+    
+    def mono_stereo(self, audio):
+        """
+        checks whether input sound is stereo or mono 
+        if stereo, add both columns to a signal channel (1 column array)
+        """
+
+
 
     def play_sound(self):
         """
