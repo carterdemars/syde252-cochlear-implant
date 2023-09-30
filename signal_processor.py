@@ -1,7 +1,7 @@
 import scipy as sp
 import numpy as np
 import matplotlib.pyplot as plt
-
+# https://docs.scipy.org/doc/scipy/reference/generated/scipy.io.wavfile.read.html
 
 class SignalProcessor():
     def __init__(self, audio):
