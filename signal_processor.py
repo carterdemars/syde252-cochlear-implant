@@ -1,17 +1,24 @@
 import scipy as sp
 import numpy as np
 import matplotlib.pyplot as plt
-# https://docs.scipy.org/doc/scipy/reference/generated/scipy.io.wavfile.read.html
+import wave
+from scipy.io import wavfile
+from scipy.signal import resample
+
+
 
 class SignalProcessor():
     def __init__(self, audio):
         self.audio = audio
 
-    def get_sampling_rate(self):
+    def get_sampling_rate(self, audio):
         """
+        3.6
         The function determines sampling rate in kHz of an input signal.
         :return: sampling rate
         """
+        sample_rate, audio = wavfile.read(audio)
+        print(f"Sampling Rate of Original WAV file: {sample_rate} Hz")
         return
 
     def play_sound(self):
