@@ -4,6 +4,7 @@ import matplotlib.pyplot as plt
 import wave
 from scipy.io import wavfile
 from scipy.signal import resample
+import sounddevice as sd
 
 
 
@@ -23,13 +24,14 @@ class SignalProcessor():
         print(f"Sampling Rate of Original WAV file: {sample_rate} Hz")
         return sample_rate, audio
     
-    def mono_stereo(self, audio):
+    def mono_stereo(self):
         """
         checks whether input sound is stereo or mono 
         if stereo, add both columns to a signal channel (1 column array)
         """
         if len(self.audio_data.shape) == 2:
             self.audio_data = self.audio_data.sum(axis=1)/2 # converts to mono audio from stereo
+        print("Coverted from Stereo to Mono")
 
     def play_sound(self):
         """
@@ -46,10 +48,10 @@ class SignalProcessor():
         :return:
         """
         plt.figure(figsize=(10,4))
-        plt.plot(self.audio)
+        plt.plot(self.audio_data)
         plt.title('Audio Waveform')
         plt.xlabel('Sample')
-        plt.ylable('Amplitude')
+        plt.ylabel('Amplitude')
         plt.show()
         return
     
@@ -57,20 +59,78 @@ class SignalProcessor():
         """
         if sample rate of audio is not 16000Hz, funtion resamples it to 16000Hz
         """
-        if self.smaple_rate != 16000:
-            self.audio = resample(self.audio, int(16000/self.sample_rate * len(self.audio)))
+        if self.sample_rate != 16000:
+            self.audio_data = resample(self.audio_data, int(16000/self.sample_rate * len(self.audio_data)))
             self.sample_rate = 16000
+    
+    def generate_cos(self):
+        """
+        Generates a cosine signal of 1kHz frequency that has the same duration as the audio signal
+        """
+        #duration of signal (total time in s that original audio lasts) = total number of samples/sample rate
+        duration = len(self.audio_data) / self.sample_rate
 
-    def 
+        #creating linearly spaced array for 1kHz
+        time = np.linspace(0., duration, len(self.audio_data))
+
+        frequency = 1000 #1kHz
+
+        #generating cosine wave: A * cos(2*pi*frequency*t)
+        #where A = amplitude, t = time
+        cosine_signal = np.cos(2* np.pi * frequency * time)
+
+        return time, cosine_signal
+    
+
+    def plot_cos(self, time, cosine_signal):
+        """
+        Plots the first two cycles of the generated cos signal
+        """
+        freq = 1000
+        plt.figure(figsize=(10,4))
+        #plotting for two cycles:
+        #x axis: divide sample rate by frequency, and multiply by 2 to plot 2 cycles
+        #y axis: same as above, but with cosine signal
+        two_cycles = int((2/freq) * self.sample_rate)
+        plt.plot(time[:two_cycles], cosine_signal[:two_cycles])
+        plt.title("Cosine Waveform (1kHz)")
+        plt.xlabel('Time [s]')
+        plt.ylabel('Amplitude')
+        plt.show()
+
+    def normalize_audio(self):
+        """
+        Normalize audio to fit withing range of [-1, 1]
+        """
+        max_audio = np.max(np.abs(self.audio_data))
+        if max_audio > 0:
+            self.audio_data = self.audio_data / max_audio
+        print("Audio Normalized")
+
 
     def save_audio(self, output_filepath):
         """
         Saves the processed signal to a new WAV filepath
         """
-        wavfile.write(output_filepath, self.sample_rate, self.audio)
+        wavfile.write(output_filepath, self.sample_rate, self.audio_data)
+    
+    def process(self):
+        self.sample_rate, self.audio_data = self.get_sampling_rate(self.audio)
 
+        #main processing function that calls defined functions
+        self.mono_stereo()
+        self.normalize_audio()
+        self.play_sound()
+        self.save_audio('original.wav')
+        self.resample_audio()
+        time, cosine_signal = self.generate_cos()
+        self.plot_waveform()
+        self.plot_cos(time, cosine_signal)
+        self.play_sound()
+        self.save_audio('converted.wav')
 
 
 if __name__ == "__main__":
-    test_audio = None
-    processor = SignalProcessor(test_audio)
+    audio = '03-laufey-from-the-start.wav'
+    processor = SignalProcessor(audio)
+    processor.process()
