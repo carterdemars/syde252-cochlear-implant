@@ -4,6 +4,7 @@ import matplotlib.pyplot as plt
 import wave
 from scipy.io import wavfile
 from scipy.signal import resample
+import sounddevice as sd
 
 
 
@@ -30,6 +31,7 @@ class SignalProcessor():
         """
         if len(self.audio_data.shape) == 2:
             self.audio_data = self.audio_data.sum(axis=1)/2 # converts to mono audio from stereo
+        print("Coverted from Stereo to Mono")
 
     def play_sound(self):
         """
@@ -49,7 +51,7 @@ class SignalProcessor():
         plt.plot(self.audio)
         plt.title('Audio Waveform')
         plt.xlabel('Sample')
-        plt.ylable('Amplitude')
+        plt.ylabel('Amplitude')
         plt.show()
         return
     
@@ -60,14 +62,57 @@ class SignalProcessor():
         if self.smaple_rate != 16000:
             self.audio = resample(self.audio, int(16000/self.sample_rate * len(self.audio)))
             self.sample_rate = 16000
+    
+    def generate_cos(self):
+        """
+        Generates a cosine signal of 1kHz frequency that has the same duration as the audio signal
+        """
+        #duration of signal (total time in s that original audio lasts) = total number of samples/sample rate
+        duration = len(self.audio) / self.sample_rate
 
-    def 
+        #creating linearly spaced array for 1kHz
+        time = np.linspace(0, duration, len(self.audio))
+
+        frequency = 1000 #1kHz
+
+        #generating cosine wave: A * cos(2*pi*frequency*t)
+        #where A = amplitude, t = time
+        cosine_signal = np.cos(2* np.pi * frequency * time)
+
+        return time, cosine_signal
+    
+
+    def plot_cos(self, time, cosine_signal):
+        """
+        Plots the first two cycles of the generated cos signal
+        """
+        plt.figure(figsize=(10,4))
+        #plotting for two cycles:
+        #x axis: divide sample rate by frequency, and multiply by 2 to plot 2 cycles
+        #y axis: same as above, but with cosine signal
+        plt.plot(time[:int(self.sample_rate/ 1000 * 2)], cosine_signal[:int(self.sample_rate/ 1000 * 2)])
+        plt.title("Cosine Waveform (1kHz)")
+        plt.xlabel('Time [s]')
+        plt.ylabel('Amplitude')
+        plt.show()
+
 
     def save_audio(self, output_filepath):
         """
         Saves the processed signal to a new WAV filepath
         """
         wavfile.write(output_filepath, self.sample_rate, self.audio)
+    
+    def process(self):
+        #main processing function that calls defined functions
+        self.mono_stereo()
+        self.resample_audio()
+        time, cosine_signal = self.generate_cos()
+        self.plot_waveform()
+        self.plot_cos(time, cosine_signal)
+        self.save_audio()
+
+
 
 
 
