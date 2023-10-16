@@ -68,16 +68,16 @@ class SignalProcessor():
         Generates a cosine signal of 1kHz frequency that has the same duration as the audio signal
         """
         #duration of signal (total time in s that original audio lasts) = total number of samples/sample rate
-        duration = len(self.audio) / self.sample_rate
+        duration = len(self.audio_data) / self.sample_rate
 
         #creating linearly spaced array for 1kHz
-        time = np.linspace(0, duration, len(self.audio_data))
+        time = np.linspace(0., duration, len(self.audio_data))
 
         frequency = 1000 #1kHz
 
         #generating cosine wave: A * cos(2*pi*frequency*t)
         #where A = amplitude, t = time
-        cosine_signal = 0.5 * np.cos(2* np.pi * frequency * time)
+        cosine_signal = np.cos(2* np.pi * frequency * time)
 
         return time, cosine_signal
     
@@ -86,11 +86,13 @@ class SignalProcessor():
         """
         Plots the first two cycles of the generated cos signal
         """
+        freq = 1000
         plt.figure(figsize=(10,4))
         #plotting for two cycles:
         #x axis: divide sample rate by frequency, and multiply by 2 to plot 2 cycles
         #y axis: same as above, but with cosine signal
-        plt.plot(time[:int(self.sample_rate/ 1000 * 2)], cosine_signal[:int(self.sample_rate/ 1000 * 2)])
+        two_cycles = int((2/freq) * self.sample_rate)
+        plt.plot(time[:two_cycles], cosine_signal[:two_cycles])
         plt.title("Cosine Waveform (1kHz)")
         plt.xlabel('Time [s]')
         plt.ylabel('Amplitude')
@@ -117,13 +119,15 @@ class SignalProcessor():
 
         #main processing function that calls defined functions
         self.mono_stereo()
-        self.resample_audio()
         self.normalize_audio()
+        self.play_sound()
+        self.save_audio('original.wav')
+        self.resample_audio()
         time, cosine_signal = self.generate_cos()
         self.plot_waveform()
         self.plot_cos(time, cosine_signal)
         self.play_sound()
-        self.save_audio('output1.wav')
+        self.save_audio('converted.wav')
 
 
 if __name__ == "__main__":
