@@ -45,8 +45,25 @@ class SignalProcessor():
         Plots the sound waveform as a function of the sample number
         :return:
         """
+        plt.figure(figsize=(10,4))
+        plt.plot(self.audio)
+        plt.title('Audio Waveform')
+        plt.xlabel('Sample')
+        plt.ylable('Amplitude')
+        plt.show()
         return
-    def save_audio(solf, output_filepath):
+    
+    def resample_audio(self):
+        """
+        if sample rate of audio is not 16000Hz, funtion resamples it to 16000Hz
+        """
+        if self.smaple_rate != 16000:
+            self.audio = resample(self.audio, int(16000/self.sample_rate * len(self.audio)))
+            self.sample_rate = 16000
+
+    def 
+
+    def save_audio(self, output_filepath):
         """
         Saves the processed signal to a new WAV filepath
         """
