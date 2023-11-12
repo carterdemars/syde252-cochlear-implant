@@ -119,13 +119,13 @@ class SignalProcessor():
         #main processing function that calls defined functions
         self.mono_stereo()
         self.normalize_audio()
-        self.play_sound()
+        #self.play_sound()
         self.save_audio('original.wav')
         self.resample_audio()
         time, cosine_signal = self.generate_cos()
         self.plot_waveform()
         self.plot_cos(time, cosine_signal)
-        self.play_sound()
+        #self.play_sound()
         self.save_audio('converted.wav')
 
     def create_bandpass(self, low_freq, high_freq, order):
@@ -136,7 +136,7 @@ class SignalProcessor():
         :param order:
         :return:
         """
-        return scipy.signal.butter(order, Wn=[low_freq, high_freq], btype='bandpass', fs=self.sample_rate, output='sos')
+        return scipy.signal.butter(order, Wn=[low_freq, high_freq], btype='bandpass', fs=self.sample_rate*2*np.pi, output='sos')
 
 
 if __name__ == "__main__":
