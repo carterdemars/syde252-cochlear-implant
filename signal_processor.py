@@ -1,12 +1,11 @@
+import scipy
 import scipy as sp
 import numpy as np
 import matplotlib.pyplot as plt
 import wave
 from scipy.io import wavfile
-from scipy.signal import resample
+from scipy import signal
 import sounddevice as sd
-
-
 
 class SignalProcessor():
     def __init__(self, audio):
@@ -60,7 +59,7 @@ class SignalProcessor():
         if sample rate of audio is not 16000Hz, funtion resamples it to 16000Hz
         """
         if self.sample_rate != 16000:
-            self.audio_data = resample(self.audio_data, int(16000/self.sample_rate * len(self.audio_data)))
+            self.audio_data = signal.resample(self.audio_data, int(16000/self.sample_rate * len(self.audio_data)))
             self.sample_rate = 16000
     
     def generate_cos(self):
@@ -128,6 +127,16 @@ class SignalProcessor():
         self.plot_cos(time, cosine_signal)
         self.play_sound()
         self.save_audio('converted.wav')
+
+    def create_bandpass(self, low_freq, high_freq, order):
+        """
+        Can also use scipy.signal.buttord to dynamically select order based on minimum requirements.
+        :param low_freq:
+        :param high_freq:
+        :param order:
+        :return:
+        """
+        return scipy.signal.butter(order, Wn=[low_freq, high_freq], btype='bandpass', fs=self.sample_rate, output='sos')
 
 
 if __name__ == "__main__":
