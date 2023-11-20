@@ -2,7 +2,6 @@ import scipy
 import scipy as sp
 import numpy as np
 import matplotlib.pyplot as plt
-import wave
 from scipy.io import wavfile
 from scipy import signal
 import sounddevice as sd
@@ -19,9 +18,9 @@ class SignalProcessor():
         The function determines sampling rate in kHz of an input signal.
         :return: sampling rate
         """
-        sample_rate, audio = wavfile.read(audio)
-        print(f"Sampling Rate of Original WAV file: {sample_rate} Hz")
-        return sample_rate, audio
+        self.sample_rate, self.audio = wavfile.read(audio)
+        print(f"Sampling Rate of Original WAV file: {self.sample_rate} Hz")
+        return self.sample_rate, self.audio
     
     def mono_stereo(self):
         """
@@ -129,6 +128,64 @@ class SignalProcessor():
         #self.play_sound()
         self.save_audio('converted.wav')
 
+    def create_bandpass_filters(self, N, low_freq=100, high_freq=8000):
+
+        # Nyquist frequency as stated in the hint in Task 4
+        nyquist_freq = self.sample_rate / 2
+
+
+        # Ensure the high frequency does not exceed the Nyquist frequency
+        high_freq = min(high_freq, nyquist_freq)
+
+        filters = []
+        # Use logspace to create frequency bands on a logarithmic scale
+        freq_bands = np.logspace(np.log10(low_freq), np.log10(high_freq), N + 1)
+        for i in range(N):
+            bp_filter = signal.butter(8, Wn=[freq_bands[i], freq_bands[i+1]], btype='bandpass', fs=self.sample_rate, output='sos')
+            filters.append(bp_filter)
+        return filters
+
+    def apply_filters(self, filters):
+        filtered_signals = []
+        for bp_filter in filters:
+            filtered_signal = signal.sosfilt(bp_filter, self.audio_data)
+            filtered_signals.append(filtered_signal)
+        return filtered_signals
+
+    def plot_filtered_signals(self, filtered_signals):
+        """
+        Plots the output signals of the lowest and highest frequency channels on subplots
+        """
+        plt.figure(figsize=(10, 8))
+
+        # Plot for the lowest frequency channel
+        plt.subplot(2, 1, 1)  
+        plt.plot(filtered_signals[0])
+        plt.title('Lowest Frequency Channel')
+        plt.xlabel('Sample')
+        plt.ylabel('Amplitude')
+
+        # Plot for the highest frequency channel
+        plt.subplot(2, 1, 2)  
+        plt.plot(filtered_signals[-1], color = 'red')
+        plt.title('Highest Frequency Channel')
+        plt.xlabel('Sample')
+        plt.ylabel('Amplitude')
+
+        plt.tight_layout()  
+        plt.show()
+
+
+
+    def process2(self):
+        N = 10
+        self.sample_rate, self.audio_data = self.get_sampling_rate(self.audio)
+        self.mono_stereo()
+        self.normalize_audio()
+        bandpass_filters = self.create_bandpass_filters(N)
+        filtered_signals = self.apply_filters(bandpass_filters)
+        self.plot_filtered_signals(filtered_signals)
+
     def create_bandpass(self, low_freq, high_freq, order):
         """
         Can also use scipy.signal.buttord to dynamically select order based on minimum requirements.
@@ -137,14 +194,13 @@ class SignalProcessor():
         :param order:
         :return:
         """
-        nyquist = self.sample_rate / 2
+        nyquist = self.sample_rate / 2.0
         low = low_freq / nyquist
         high = high_freq / nyquist
-        return scipy.signal.butter(order, Wn=[low, high], btype='bandpass', fs=self.sample_rate, output='sos')
-
+        return signal.butter(order, Wn=[low, high], btype='bandpass', fs = self.sample_rate, output='sos')
 
 
 if __name__ == "__main__":
     audio = '03-laufey-from-the-start.wav'
     processor = SignalProcessor(audio)
-    processor.process()
+    processor.process2()
