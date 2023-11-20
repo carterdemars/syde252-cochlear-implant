@@ -138,6 +138,13 @@ class SignalProcessor():
         """
         return scipy.signal.butter(order, Wn=[low_freq, high_freq], btype='bandpass', fs=self.sample_rate*2*np.pi, output='sos')
 
+    def envelope_extraction(self, data, cutoff_frequency, sampling_rate, order=4):
+        nyquist = 0.5 * sampling_rate
+        normal_cutoff = cutoff_frequency / nyquist
+        b, a = scipy.signal.butter(order, normal_cutoff, btype='low', analog=False)
+        y = signal.filtfilt(b, a, data)
+        return y
+
 
 if __name__ == "__main__":
     audio = '03-laufey-from-the-start.wav'
