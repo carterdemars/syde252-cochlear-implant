@@ -61,6 +61,7 @@ class SignalProcessor():
         if self.sample_rate != 16000:
             self.audio_data = signal.resample(self.audio_data, int(16000/self.sample_rate * len(self.audio_data)))
             self.sample_rate = 16000
+            print("Audio Resampled")
     
     def generate_cos(self):
         """
@@ -137,6 +138,7 @@ class SignalProcessor():
         :return:
         """
         return scipy.signal.butter(order, Wn=[low_freq, high_freq], btype='bandpass', fs=self.sample_rate*2*np.pi, output='sos')
+
 
 
 if __name__ == "__main__":
