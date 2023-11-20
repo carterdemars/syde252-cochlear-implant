@@ -137,7 +137,10 @@ class SignalProcessor():
         :param order:
         :return:
         """
-        return scipy.signal.butter(order, Wn=[low_freq, high_freq], btype='bandpass', fs=self.sample_rate*2*np.pi, output='sos')
+        nyquist = self.sample_rate / 2
+        low = low_freq / nyquist
+        high = high_freq / nyquist
+        return scipy.signal.butter(order, Wn=[low, high], btype='bandpass', fs=self.sample_rate, output='sos')
 
 
 
