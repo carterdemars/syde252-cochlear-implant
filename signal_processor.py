@@ -185,6 +185,28 @@ class SignalProcessor():
         # rectify the signal and apply the filter
         self.envelopes = [signal.filtfilt(b, a, np.abs(channel)) for channel in self.channels]
 
+    def plot_envelopes(self):
+        """
+        Plots the extracted envelopes of the lowest and highest frequency channels on subplots
+        """
+        plt.figure(figsize=(10, 8))
+
+        # Plot for the lowest frequency channel
+        plt.subplot(2, 1, 1)
+        plt.plot(self.envelopes[0])
+        plt.title('Lowest Frequency Channel')
+        plt.xlabel('Sample')
+        plt.ylabel('Amplitude')
+
+        # Plot for the highest frequency channel
+        plt.subplot(2, 1, 2)
+        plt.plot(self.envelopes[-1], color = 'red')
+        plt.title('Highest Frequency Channel')
+        plt.xlabel('Sample')
+        plt.ylabel('Amplitude')
+
+        plt.tight_layout()
+        plt.show()
 
 
     def process2(self):
@@ -195,6 +217,8 @@ class SignalProcessor():
         bandpass_filters = self.create_bandpass_filters(N)
         self.channels = self.apply_filters(bandpass_filters)
         self.plot_filtered_signals(self.channels)
+        self.envelope_extraction()
+        self.plot_envelopes()
 
     def create_bandpass(self, low_freq, high_freq, order):
         """
