@@ -6,11 +6,12 @@ from scipy.io import wavfile
 from scipy import signal
 import sounddevice as sd
 
+
 class SignalProcessor():
     def __init__(self, audio):
         self.audio = audio
-        self.audio_data = None # Data is read from audio file and stored here
-        self.sample_rate = None #Sampling rate of the audio file
+        self.audio_data = None  # Data is read from audio file and stored here
+        self.sample_rate = None  # Sampling rate of the audio file
         self.channels = []
         self.envelopes = []
 
@@ -23,14 +24,14 @@ class SignalProcessor():
         self.sample_rate, self.audio = wavfile.read(audio)
         print(f"Sampling Rate of Original WAV file: {self.sample_rate} Hz")
         return self.sample_rate, self.audio
-    
+
     def mono_stereo(self):
         """
         checks whether input sound is stereo or mono 
         if stereo, add both columns to a signal channel (1 column array)
         """
         if len(self.audio_data.shape) == 2:
-            self.audio_data = self.audio_data.sum(axis=1)/2 # converts to mono audio from stereo
+            self.audio_data = self.audio_data.sum(axis=1) / 2  # converts to mono audio from stereo
         print("Coverted from Stereo to Mono")
 
     def play_sound(self):
@@ -38,8 +39,8 @@ class SignalProcessor():
         Plays the sound out loud.
         :return: None
         """
-        sd.play(self.audio_data, self.sample_rate) #plays data extracted from audio file at found sampling rate
-        sd.wait() #blocks python interpreter until playback is finished
+        sd.play(self.audio_data, self.sample_rate)  # plays data extracted from audio file at found sampling rate
+        sd.wait()  # blocks python interpreter until playback is finished
         return
 
     def plot_waveform(self):
@@ -47,52 +48,51 @@ class SignalProcessor():
         Plots the sound waveform as a function of the sample number
         :return:
         """
-        plt.figure(figsize=(10,4))
+        plt.figure(figsize=(10, 4))
         plt.plot(self.audio_data)
         plt.title('Audio Waveform')
         plt.xlabel('Sample')
         plt.ylabel('Amplitude')
         plt.show()
         return
-    
+
     def resample_audio(self):
         """
         if sample rate of audio is not 16000Hz, funtion resamples it to 16000Hz
         """
         if self.sample_rate != 16000:
-            self.audio_data = signal.resample(self.audio_data, int(16000/self.sample_rate * len(self.audio_data)))
+            self.audio_data = signal.resample(self.audio_data, int(16000 / self.sample_rate * len(self.audio_data)))
             self.sample_rate = 16000
             print("Audio Resampled")
-    
+
     def generate_cos(self):
         """
         Generates a cosine signal of 1kHz frequency that has the same duration as the audio signal
         """
-        #duration of signal (total time in s that original audio lasts) = total number of samples/sample rate
+        # duration of signal (total time in s that original audio lasts) = total number of samples/sample rate
         duration = len(self.audio_data) / self.sample_rate
 
-        #creating linearly spaced array for 1kHz
+        # creating linearly spaced array for 1kHz
         time = np.linspace(0., duration, len(self.audio_data))
 
-        frequency = 1000 #1kHz
+        frequency = 1000  # 1kHz
 
-        #generating cosine wave: A * cos(2*pi*frequency*t)
-        #where A = amplitude, t = time
-        cosine_signal = np.cos(2* np.pi * frequency * time)
+        # generating cosine wave: A * cos(2*pi*frequency*t)
+        # where A = amplitude, t = time
+        cosine_signal = np.cos(2 * np.pi * frequency * time)
 
         return time, cosine_signal
-    
 
     def plot_cos(self, time, cosine_signal):
         """
         Plots the first two cycles of the generated cos signal
         """
         freq = 1000
-        plt.figure(figsize=(10,4))
-        #plotting for two cycles:
-        #x axis: divide sample rate by frequency, and multiply by 2 to plot 2 cycles
-        #y axis: same as above, but with cosine signal
-        two_cycles = int((2/freq) * self.sample_rate)
+        plt.figure(figsize=(10, 4))
+        # plotting for two cycles:
+        # x axis: divide sample rate by frequency, and multiply by 2 to plot 2 cycles
+        # y axis: same as above, but with cosine signal
+        two_cycles = int((2 / freq) * self.sample_rate)
         plt.plot(time[:two_cycles], cosine_signal[:two_cycles])
         plt.title("Cosine Waveform (1kHz)")
         plt.xlabel('Time [s]')
@@ -108,33 +108,31 @@ class SignalProcessor():
             self.audio_data = self.audio_data / max_audio
         print("Audio Normalized")
 
-
     def save_audio(self, output_filepath):
         """
         Saves the processed signal to a new WAV filepath
         """
         wavfile.write(output_filepath, self.sample_rate, self.audio_data)
-    
+
     def process(self):
         self.sample_rate, self.audio_data = self.get_sampling_rate(self.audio)
 
-        #main processing function that calls defined functions
+        # main processing function that calls defined functions
         self.mono_stereo()
         self.normalize_audio()
-        #self.play_sound()
+        # self.play_sound()
         self.save_audio('original.wav')
         self.resample_audio()
         time, cosine_signal = self.generate_cos()
         self.plot_waveform()
         self.plot_cos(time, cosine_signal)
-        #self.play_sound()
+        # self.play_sound()
         self.save_audio('converted.wav')
 
     def create_bandpass_filters(self, N, low_freq=100, high_freq=8000):
 
         # Nyquist frequency as stated in the hint in Task 4
         nyquist_freq = self.sample_rate / 2
-
 
         # Ensure the high frequency does not exceed the Nyquist frequency
         high_freq = min(high_freq, nyquist_freq)
@@ -143,7 +141,8 @@ class SignalProcessor():
         # Use logspace to create frequency bands on a logarithmic scale
         freq_bands = np.logspace(np.log10(low_freq), np.log10(high_freq), N + 1)
         for i in range(N):
-            bp_filter = signal.butter(8, Wn=[freq_bands[i], freq_bands[i+1]], btype='bandpass', fs=self.sample_rate, output='sos')
+            bp_filter = signal.butter(8, Wn=[freq_bands[i], freq_bands[i + 1]], btype='bandpass', fs=self.sample_rate,
+                                      output='sos')
             filters.append(bp_filter)
         return filters
 
@@ -161,20 +160,20 @@ class SignalProcessor():
         plt.figure(figsize=(10, 8))
 
         # Plot for the lowest frequency channel
-        plt.subplot(2, 1, 1)  
+        plt.subplot(2, 1, 1)
         plt.plot(filtered_signals[0])
         plt.title('Lowest Frequency Channel')
         plt.xlabel('Sample')
         plt.ylabel('Amplitude')
 
         # Plot for the highest frequency channel
-        plt.subplot(2, 1, 2)  
-        plt.plot(filtered_signals[-1], color = 'red')
+        plt.subplot(2, 1, 2)
+        plt.plot(filtered_signals[-1], color='red')
         plt.title('Highest Frequency Channel')
         plt.xlabel('Sample')
         plt.ylabel('Amplitude')
 
-        plt.tight_layout()  
+        plt.tight_layout()
         plt.show()
 
     def envelope_extraction(self, cutoff_frequency=400, order=8):
@@ -185,30 +184,6 @@ class SignalProcessor():
         # rectify the signal and apply the filter
         self.envelopes = [signal.filtfilt(b, a, np.abs(channel)) for channel in self.channels]
 
-    def plot_envelopes(self):
-        """
-        Plots the extracted envelopes of the lowest and highest frequency channels on subplots
-        """
-        plt.figure(figsize=(10, 8))
-
-        # Plot for the lowest frequency channel
-        plt.subplot(2, 1, 1)
-        plt.plot(self.envelopes[0])
-        plt.title('Lowest Frequency Channel')
-        plt.xlabel('Sample')
-        plt.ylabel('Amplitude')
-
-        # Plot for the highest frequency channel
-        plt.subplot(2, 1, 2)
-        plt.plot(self.envelopes[-1], color = 'red')
-        plt.title('Highest Frequency Channel')
-        plt.xlabel('Sample')
-        plt.ylabel('Amplitude')
-
-        plt.tight_layout()
-        plt.show()
-
-
     def process2(self):
         N = 10
         self.sample_rate, self.audio_data = self.get_sampling_rate(self.audio)
@@ -218,7 +193,7 @@ class SignalProcessor():
         self.channels = self.apply_filters(bandpass_filters)
         self.plot_filtered_signals(self.channels)
         self.envelope_extraction()
-        self.plot_envelopes()
+        self.plot_filtered_signals(self.envelopes)
 
     def create_bandpass(self, low_freq, high_freq, order):
         """
@@ -231,7 +206,7 @@ class SignalProcessor():
         nyquist = self.sample_rate / 2.0
         low = low_freq / nyquist
         high = high_freq / nyquist
-        return signal.butter(order, Wn=[low, high], btype='bandpass', fs = self.sample_rate, output='sos')
+        return signal.butter(order, Wn=[low, high], btype='bandpass', fs=self.sample_rate, output='sos')
 
 
 if __name__ == "__main__":
