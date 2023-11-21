@@ -12,6 +12,7 @@ class SignalProcessor():
         self.audio_data = None # Data is read from audio file and stored here
         self.sample_rate = None #Sampling rate of the audio file
         self.channels = []
+        self.envelopes = []
 
     def get_sampling_rate(self, audio):
         """
@@ -175,6 +176,14 @@ class SignalProcessor():
 
         plt.tight_layout()  
         plt.show()
+
+    def envelope_extraction(self, cutoff_frequency=400, order=8):
+
+        # generate a lowpass filter with 400Hz cutoff
+        b, a = scipy.signal.butter(order, cutoff_frequency, btype='low', analog=False, fs=self.sample_rate)
+
+        # rectify the signal and apply the filter
+        self.envelopes = [signal.filtfilt(b, a, np.abs(channel)) for channel in self.channels]
 
 
 
