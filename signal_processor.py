@@ -11,6 +11,7 @@ class SignalProcessor():
         self.audio = audio
         self.audio_data = None # Data is read from audio file and stored here
         self.sample_rate = None #Sampling rate of the audio file
+        self.channels = []
 
     def get_sampling_rate(self, audio):
         """
@@ -183,8 +184,8 @@ class SignalProcessor():
         self.mono_stereo()
         self.normalize_audio()
         bandpass_filters = self.create_bandpass_filters(N)
-        filtered_signals = self.apply_filters(bandpass_filters)
-        self.plot_filtered_signals(filtered_signals)
+        self.channels = self.apply_filters(bandpass_filters)
+        self.plot_filtered_signals(self.channels)
 
     def create_bandpass(self, low_freq, high_freq, order):
         """
