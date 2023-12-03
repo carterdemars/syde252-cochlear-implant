@@ -130,28 +130,21 @@ class SignalProcessor():
         self.save_audio('converted.wav')
 
     def create_bandpass_filters(self, N, low_freq=100, high_freq=8000):
-
-        # Nyquist frequency as stated in the hint in Task 4
-        nyquist_freq = self.sample_rate / 2
-
-        # Ensure the high frequency does not exceed the Nyquist frequency
-        high_freq = min(high_freq, nyquist_freq)
-
-        filters = []
-        # Use logspace to create frequency bands on a logarithmic scale
+        self.bandpass_filters = []
+        self.filter_freq_ranges = []  # Separate list for frequency ranges
         freq_bands = np.logspace(np.log10(low_freq), np.log10(high_freq), N + 1)
         for i in range(N):
-            bp_filter = signal.butter(8, Wn=[freq_bands[i], freq_bands[i + 1]], btype='bandpass', fs=self.sample_rate,
-                                      output='sos')
-            filters.append(bp_filter)
-        return filters
+            bp_filter = signal.butter(8, Wn=[freq_bands[i], freq_bands[i + 1]], btype='bandpass', fs=self.sample_rate, output='sos')
+            self.bandpass_filters.append(bp_filter)  # Store only filter coefficients
+            self.filter_freq_ranges.append((freq_bands[i], freq_bands[i + 1]))  # Store frequency ranges separately
 
-    def apply_filters(self, filters):
+    def apply_filters(self):
         filtered_signals = []
-        for bp_filter in filters:
+        for bp_filter in self.bandpass_filters:
             filtered_signal = signal.sosfilt(bp_filter, self.audio_data)
             filtered_signals.append(filtered_signal)
         return filtered_signals
+
 
     def plot_filtered_signals(self, filtered_signals):
         """
@@ -194,22 +187,64 @@ class SignalProcessor():
         self.plot_filtered_signals(self.channels)
         self.envelope_extraction()
         self.plot_filtered_signals(self.envelopes)
+    
+    def generate_cos_for_channel(self, frequency, length):
+        duration = length / self.sample_rate
+        time = np.linspace(0., duration, length)
+        cosine_signal = np.cos(2 * np.pi * frequency * time)
+        return cosine_signal
+    
+    def generate_cos_signals_for_all_channels(self):
+        cosine_signals = []
+        for (low_freq, high_freq) in self.filter_freq_ranges:
+            central_freq = np.sqrt(low_freq * high_freq)
+            length = len(self.envelopes[0])
+            cosine_signal = self.generate_cos_for_channel(central_freq, length)
+            cosine_signals.append(cosine_signal)
+        return cosine_signals
+    
+    def amplitude_modulate(self, cosine_signal, rectified_signal):
+        return cosine_signal * rectified_signal
+    
+    def play_and_save_output_audio(self, final_signal):
+        sd.play(self.output_signal, self.sample_rate)
+        sd.wait() 
+        wavfile.write(final_signal, self.sample_rate, self.output_signal.astype(np.float32))
+        print(f"Output audio saved to {final_signal}")
 
-    def create_bandpass(self, low_freq, high_freq, order):
-        """
-        Can also use scipy.signal.buttord to dynamically select order based on minimum requirements.
-        :param low_freq:
-        :param high_freq:
-        :param order:
-        :return:
-        """
-        nyquist = self.sample_rate / 2.0
-        low = low_freq / nyquist
-        high = high_freq / nyquist
-        return signal.butter(order, Wn=[low, high], btype='bandpass', fs=self.sample_rate, output='sos')
+
+    
+    def process3(self):
+        N = 10
+        self.sample_rate, self.audio_data = self.get_sampling_rate(self.audio)
+        self.mono_stereo()
+        self.normalize_audio()
+        self.create_bandpass_filters(N)
+        self.channels = self.apply_filters()
+        self.plot_filtered_signals(self.channels)
+        self.envelope_extraction()
+        self.plot_filtered_signals(self.envelopes)
+        #Task 10
+        self.cosine_signals = self.generate_cos_signals_for_all_channels()
+        #Task 11
+        self.amp_modulated_signals = []
+        #amplitude modulate for every signal
+        for cosine_signal, rectified_signal in zip(self.cosine_signals, self.envelopes):
+            amp_signal = self.amplitude_modulate(cosine_signal, rectified_signal)
+            self.amp_modulated_signals.append(amp_signal)
+        #Task 12
+        #Add all amplitude modulated signals
+        self.output_signal = np.sum(self.amp_modulated_signals, axis=0)
+        #Normalize output signal
+        #Task 13
+        self.play_and_save_output_audio('final_output.wav')
+
+        
+
+
 
 
 if __name__ == "__main__":
     audio = '03-laufey-from-the-start.wav'
     processor = SignalProcessor(audio)
-    processor.process2()
+    processor.process3()
