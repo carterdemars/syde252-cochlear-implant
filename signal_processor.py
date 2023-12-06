@@ -5,6 +5,7 @@ import matplotlib.pyplot as plt
 from scipy.io import wavfile
 from scipy import signal
 import sounddevice as sd
+import os
 
 
 class SignalProcessor():
@@ -133,8 +134,9 @@ class SignalProcessor():
         self.bandpass_filters = []
         self.filter_freq_ranges = []  # Separate list for frequency ranges
         freq_bands = np.logspace(np.log10(low_freq), np.log10(high_freq), N + 1)
+        #freq_bands = np.linspace(low_freq, high_freq, N + 1)
         for i in range(N):
-            bp_filter = signal.butter(8, Wn=[freq_bands[i], freq_bands[i + 1]], btype='bandpass', fs=self.sample_rate, output='sos')
+            bp_filter = signal.butter(N=8, Wn=[freq_bands[i], freq_bands[i + 1]], btype='bandpass', fs=self.sample_rate, output='sos')
             self.bandpass_filters.append(bp_filter)  # Store only filter coefficients
             self.filter_freq_ranges.append((freq_bands[i], freq_bands[i + 1]))  # Store frequency ranges separately
 
@@ -215,15 +217,16 @@ class SignalProcessor():
 
     
     def process3(self):
-        N = 10
+        N = 30
         self.sample_rate, self.audio_data = self.get_sampling_rate(self.audio)
         self.mono_stereo()
         self.normalize_audio()
+        #self.play_sound()
         self.create_bandpass_filters(N)
         self.channels = self.apply_filters()
-        self.plot_filtered_signals(self.channels)
+        #self.plot_filtered_signals(self.channels)
         self.envelope_extraction()
-        self.plot_filtered_signals(self.envelopes)
+        #self.plot_filtered_signals(self.envelopes)
         #Task 10
         self.cosine_signals = self.generate_cos_signals_for_all_channels()
         #Task 11
@@ -245,6 +248,12 @@ class SignalProcessor():
 
 
 if __name__ == "__main__":
-    audio = '03-laufey-from-the-start.wav'
-    processor = SignalProcessor(audio)
-    processor.process3()
+    for audio in sorted(os.listdir('./audio-files'))[1:]:
+        print(audio)
+        processor = SignalProcessor('./audio-files/'+f'{audio}')
+        tmp = input("Press space to continue")
+        processor.process3()
+
+    #audio = '03-laufey-from-the-start.wav'
+    #
+    #
